@@ -10,7 +10,8 @@ object Dependencies {
     Library.reflections.notTransitive,
     Library.playSpecs2 % "test",
     Library.hsqldb % "test",
-    Library.mockito % "test"
+    Library.mockito % "test",
+    Library.compiler % "test"
   )
 
   val resolvers = DefaultOptions.resolvers(snapshot = true) ++ Seq(
@@ -39,4 +40,5 @@ object Library {
   val playSpecs2   = "com.typesafe.play"        %% "play-specs2"       % Version.play
   val reflections  = "org.reflections"          %  "reflections"       % Version.reflections
   val slick        = "com.typesafe.slick"       %% "slick"             % Version.slick
+  val compiler     = "org.scala-lang" % "scala-compiler" % "2.11.6" 
 }
