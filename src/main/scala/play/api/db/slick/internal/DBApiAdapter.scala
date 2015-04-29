@@ -4,14 +4,17 @@ import java.sql.Connection
 
 import javax.inject.Inject
 import javax.sql.DataSource
-
+import play.api.Logger
+import play.api.PlayException
 import play.api.db.DBApi
 import play.api.db.{Database => PlayDatabase}
 import play.api.db.slick.DbName
+import play.api.db.slick.IssueTracker
 import play.api.db.slick.SlickApi
-
 import slick.backend.DatabaseConfig
 import slick.driver.JdbcProfile
+import slick.jdbc.DataSourceJdbcDataSource
+import slick.jdbc.HikariCPJdbcDataSource
 
 private[slick] class DBApiAdapter @Inject() (slickApi: SlickApi) extends DBApi {
   private lazy val databasesByName: Map[DbName, PlayDatabase] = slickApi.dbConfigs[JdbcProfile]().map {
@@ -30,9 +33,22 @@ private[slick] class DBApiAdapter @Inject() (slickApi: SlickApi) extends DBApi {
 }
 
 private[slick] object DBApiAdapter {
+  // I don't really like this adapter as it can be used as a trojan horse. Let's keep things simple for the moment,
+  // but in the future we may need to become more defensive and provide custom implementation for `java.sql.Connection`
+  // and `java.sql.DataSource` to prevent the ability of closing a database connection or database when using this
+  // adapter class.
   private class DatabaseAdapter(_name: DbName, dbConfig: DatabaseConfig[JdbcProfile]) extends PlayDatabase {
+    private val logger = Logger(classOf[DatabaseAdapter])
     def name: String = _name.value
-    def dataSource: DataSource = throw new UnsupportedOperationException
+    def dataSource: DataSource = {
+      dbConfig.db.source match {
+        case ds: DataSourceJdbcDataSource => ds.ds
+        case hds: HikariCPJdbcDataSource => hds.ds
+        case other =>
+          logger.error(s"Unexpected data source type ${other.getClass}. Please, file a ticket ${IssueTracker}.")
+          throw new UnsupportedOperationException
+      }
+    }
     def url: String = dbConfig.db.createSession().metaData.getURL
     def getConnection(): Connection = {
       val session = dbConfig.db.createSession()
@@ -52,6 +68,9 @@ private[slick] object DBApiAdapter {
         block(conn)
       }
     }
-    def shutdown(): Unit = () // no-op
+    def shutdown(): Unit = {
+      // no-op. The rationale is that play-slick already takes care of closing the database on application shutdown
+      ()
+    }
   }
 }

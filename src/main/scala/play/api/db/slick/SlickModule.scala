@@ -31,6 +31,8 @@ object SlickModule {
   final val DbKeyConfig = "play.slick.db.config"
   /** path in the **reference.conf** to obtain the name of the default database.*/
   final val DefaultDbName = "play.slick.db.default"
+  /** path in the **reference.conf** to obtain the path under which evolutions are configured.*/
+  final val EvolutionsKeyConfig = "play.slick.evolutions.config"
 }
 
 @Singleton
@@ -81,7 +83,7 @@ final class SlickDynamicEvolutions @Inject() (config: Configuration, slickApi: S
 
   private val logger = play.api.Logger(classOf[SlickDynamicEvolutions])
 
-  private val slickEvolutionsKey = config.underlying.getString("play.slick.evolutions.config")
+  private val slickEvolutionsKey = config.underlying.getString(SlickModule.EvolutionsKeyConfig)
 
   @throws(classOf[PlayException])
   private lazy val packageNames: Map[String, Set[String]] = {
