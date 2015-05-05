@@ -11,8 +11,11 @@ It assumes you have already migrated your project to use Play 2.4 (see [Play 2.4
 
 Update the Play Slick dependency in your sbt build to match the version provided in the [[Setup|PlaySlick#Setup]] section.
 
+## Configuration changes
 
-## Database configuration
+This section goes through the required changes in your application's configuration file (e.g., **application.conf**).
+
+### Database configuration
 
 With the past releases of Slick Play (which used Slick 2.1 or earlier), you used to configure Slick datasources exactly like you would configure Play JDBC datasources. This is no longer the case, and the following configuration will now be ignored by Play Slick:
 
@@ -37,9 +40,13 @@ slick.dbs.default.db.password=""
 
 > Note: If your database configuration contains settings for the connection pool, be aware that you will need to migrate those settings as well. However, this may be a bit trickier, because Play 2.3 default connection pool used to be BoneCP, while the default Slick 3 connection pool is HikariCP. Read [[here|PlaySlickAdvancedTopics#Connection-Pool]] for more details.
 
+### Support for Play database evolutions
+
+After correctly configuring your Slick databases, add the following `include "slick-evolutions.conf"` if you would like to use Play database evolutions with Slick. Read [[here|PlaySlick#Support-for-Play-database-evolutions]] for more details.
+
 ## Automatic Slick driver detection
 
-Play Slick used to automatically infer the needed Slick driver from the datasource configuration. This feature was removed, hence you must provide the Slick driver to use, for each Slick database configuration, in your **application.conf**.
+Play Slick used to automatically infer the needed Slick driver from the datasource configuration. This feature was removed, hence you must provide the Slick driver to use, for each Slick database configuration, in your application's configuration file.
 
 The rationale for removing this admittedly handy feature is that we want a Play Slick configuration to be a valid Slick configuration. Furthermore, it's not always possible to automatically detect the correct Slick driver from the database configuration (if this was possible, then Slick would already provide such functionality).
 

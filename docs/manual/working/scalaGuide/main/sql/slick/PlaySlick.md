@@ -116,6 +116,25 @@ And then you can define a controller's method that will run a database query:
 
 That's just like using stock Play and Slick!
 
-## Support for Play Evolutions
+## Support for Play database evolutions
 
 Play Slick supports [[Play database evolutions|Evolutions]].
+
+To enable evolutions, you need to:
+
+* Add the following in your application's configuration file (e.g., **application.conf**):
+`include "slick-evolutions.conf"` .
+* Of course, Play database evolutions needs to be enabled. See [[evolutions configuration|Evolutions#Evolutions-configuration]] for details.
+
+Including `slick-evolutions.conf` has the effect of disabling both the [[DBModule|api/scala/index.html#play.api.db.DBModule]] and [[HikariCPModule|api/scala/index.html#play.api.db.HikariCPModule]]. The `DBModule` needs to be disabled because the [[DBApi|api/scala/index.html#play.api.db.DBApi]] interface needs to be binded to a different implementation when using Slick. While, the `HikariCPModule` is disabled because Slick manages its own connection pool, and therefore there is no need to load the `HikariCPModule` when using Play Slick.
+
+If you happen to see an error similar to the following:
+
+```
+1) A binding to play.api.db.DBApi was already configured at play.api.db.slick.evolutions.EvolutionsModule.bindings(SlickModule.scala:42):
+Binding(interface play.api.db.DBApi to ConstructionTarget(class play.api.db.slick.evolutions.internal.DBApiAdapter) in interface javax.inject.Singleton).
+ at play.api.db.DBModule.bindings(DBModule.scala:25):
+Binding(interface play.api.db.DBApi to ProviderConstructionTarget(class play.api.db.DBApiProvider))
+```
+
+It is likely that you haven't added the `include "slick-evolutions.conf"` in your application's configuration. Another possibility is that there is another Play module that is binding `DBApi` to some other concrete implementation. In this evenience, you are trying to use Play Slick together with some other Play module for database access, which is likely not what you want.
